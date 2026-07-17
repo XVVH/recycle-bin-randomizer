@@ -10,21 +10,9 @@ from calendar import monthrange
 from datetime import date
 from pathlib import Path
 
+from common import DATE_KIND_TO_YMD, DATE_KINDS, MONTHS
+
 ROOT = Path(__file__).resolve().parent
-MONTHS = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-]
 
 
 def pad(n: int, w: int) -> str:
@@ -105,28 +93,8 @@ def generate_from(entry: dict, prefer_quoted: bool = True, rng: random.Random | 
         s = t["prefix"].replace(
             "{n}", f"{rng.randint(0,23):02d}{rng.randint(0,59):02d}{rng.randint(0,59):02d}"
         )
-    elif kind == "yyyymmdd":
-        s = t["prefix"].replace("{date}", random_ymd(y_min, y_max, rng)["compact"])
-    elif kind == "yyyy_mm_dd":
-        s = t["prefix"].replace("{date}", random_ymd(y_min, y_max, rng)["spaced"])
-    elif kind == "yyyy_dash_mm_dd":
-        s = t["prefix"].replace("{date}", random_ymd(y_min, y_max, rng)["dashed"])
-    elif kind == "ddmmyyyy":
-        s = t["prefix"].replace("{date}", random_ymd(y_min, y_max, rng)["ddmmyyyy"])
-    elif kind == "ddmmyy":
-        s = t["prefix"].replace("{date}", random_ymd(y_min, y_max, rng)["ddmmyy"])
-    elif kind == "mm_dd_yyyy":
-        s = t["prefix"].replace("{date}", random_ymd(y_min, y_max, rng)["mm_dd_yyyy"])
-    elif kind == "yyyy_mm":
-        s = t["prefix"].replace("{date}", random_ymd(y_min, y_max, rng)["yyyy_mm"])
-    elif kind == "month_dd_yyyy":
-        s = t["prefix"].replace("{date}", random_ymd(y_min, y_max, rng)["long"])
-    elif kind == "month_yyyy":
-        s = t["prefix"].replace("{date}", random_ymd(y_min, y_max, rng)["month_yyyy"])
-    elif kind == "ko_ymd":
-        s = t["prefix"].replace("{date}", random_ymd(y_min, y_max, rng)["ko"])
-    elif kind == "ja_ymd":
-        s = t["prefix"].replace("{date}", random_ymd(y_min, y_max, rng)["ja"])
+    elif kind in DATE_KIND_TO_YMD:
+        s = t["prefix"].replace("{date}", random_ymd(y_min, y_max, rng)[DATE_KIND_TO_YMD[kind]])
     elif kind == "year":
         this_year = date.today().year
         y1 = y_max if y_max is not None else this_year
@@ -303,20 +271,7 @@ def run_tests(seed: int = 42, rounds: int = 5) -> int:
                 break
 
     # Rubric R2: date kinds leave no Month/YYYY tokens
-    date_kinds = {
-        "yyyymmdd",
-        "yyyy_mm_dd",
-        "yyyy_dash_mm_dd",
-        "ddmmyyyy",
-        "ddmmyy",
-        "mm_dd_yyyy",
-        "yyyy_mm",
-        "month_dd_yyyy",
-        "month_yyyy",
-        "year",
-        "ko_ymd",
-        "ja_ymd",
-    }
+    date_kinds = DATE_KINDS
     by_kind = {}
     for e in entries:
         by_kind.setdefault(e["template"]["kind"], []).append(e)

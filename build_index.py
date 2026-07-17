@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import base64
+import json
 from pathlib import Path
+
+from common import DATE_KINDS, MONTHS
 
 ROOT = Path(__file__).resolve().parent
 
@@ -16,6 +19,8 @@ def main() -> None:
         )
     data = data_path.read_text(encoding="utf-8")
     b64 = base64.b64encode(data.encode("utf-8")).decode("ascii")
+    months_js = json.dumps(MONTHS, ensure_ascii=False)
+    date_kinds_js = json.dumps(sorted(DATE_KINDS), ensure_ascii=False)
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -184,16 +189,21 @@ try {{
     '<pre style="white-space:pre-wrap;color:#ffb020">' + String((err && err.message) || err) + '</pre></div>';
   throw err;
 }}
-const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-const DATE_KINDS = new Set(['yyyymmdd','yyyy_mm_dd','yyyy_dash_mm_dd','ddmmyyyy','ddmmyy','mm_dd_yyyy','yyyy_mm','month_dd_yyyy','month_yyyy','year','ko_ymd','ja_ymd']);
+const MONTHS = {months_js};
+const DATE_KINDS = new Set({date_kinds_js});
 
-document.getElementById('srcDoc').href = DATA.meta.sourceDoc;
+function safeUrl(u) {{
+  const s = String(u||'');
+  return /^https?:\\/\\//i.test(s) ? s : '#';
+}}
+const SRC_DOC = safeUrl(DATA.meta.sourceDoc);
+document.getElementById('srcDoc').href = SRC_DOC;
 document.getElementById('count').textContent = DATA.meta.entryCount;
 document.getElementById('attr').textContent =
   DATA.meta.attribution + ' ' + (DATA.meta.paddingRule||'') + ' ' + (DATA.meta.dateRule||'');
 document.getElementById('footAttr').innerHTML =
-  'Source: <a href="'+DATA.meta.sourceDoc+'" target="_blank" rel="noopener">'+DATA.meta.sourceTitle+'</a>. ' +
-  DATA.meta.attribution +
+  'Source: <a href="'+esc(SRC_DOC)+'" target="_blank" rel="noopener">'+esc(DATA.meta.sourceTitle)+'</a>. ' +
+  esc(DATA.meta.attribution) +
   ' · <a href="https://kvnaust.github.io/YouTube-NonBiasedVideoSearcher/" target="_blank" rel="noopener">Non-biased Video Searcher</a>' +
   ' · <a href="https://youtube.com/@kvnaust" target="_blank" rel="noopener">@KVNAUST</a>' +
   ' · <a href="https://x.com/mingkastermk" target="_blank" rel="noopener">X @mingkastermk</a>';

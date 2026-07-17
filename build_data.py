@@ -8,6 +8,8 @@ import re
 from collections import Counter
 from pathlib import Path
 
+from common import DATE_KIND_LABELS, DATE_KINDS
+
 ROOT = Path(__file__).resolve().parent
 DOC = Path("/tmp/yt-recycle-doc.txt")
 
@@ -422,34 +424,8 @@ def parse_doc(text: str) -> dict:
             if not rd and tmpl.get("range") and isinstance(tmpl["range"], dict) and "min" in tmpl["range"]:
                 rd = f"({tmpl['range']['min']}-{tmpl['range']['max']})"
             # surface date field in range column for UI
-            if not rd and tmpl["kind"] in {
-                "yyyymmdd",
-                "yyyy_mm_dd",
-                "yyyy_dash_mm_dd",
-                "ddmmyyyy",
-                "ddmmyy",
-                "mm_dd_yyyy",
-                "yyyy_mm",
-                "month_dd_yyyy",
-                "month_yyyy",
-                "year",
-                "ko_ymd",
-                "ja_ymd",
-            }:
-                rd = {
-                    "yyyymmdd": "YYYYMMDD",
-                    "yyyy_mm_dd": "YYYY MM DD",
-                    "yyyy_dash_mm_dd": "YYYY-MM-DD",
-                    "ddmmyyyy": "DDMMYYYY",
-                    "ddmmyy": "DDMMYY",
-                    "mm_dd_yyyy": "MM DD YYYY",
-                    "yyyy_mm": "YYYY MM",
-                    "month_dd_yyyy": "Month DD, YYYY",
-                    "month_yyyy": "Month YYYY",
-                    "year": "YYYY",
-                    "ko_ymd": "YYYY년 M월 D일",
-                    "ja_ymd": "YYYY年M月D日",
-                }[tmpl["kind"]]
+            if not rd and tmpl["kind"] in DATE_KINDS:
+                rd = DATE_KIND_LABELS[tmpl["kind"]]
                 if tmpl.get("yearMin"):
                     rd += f" (≥{tmpl['yearMin']})"
             pad_w = None
