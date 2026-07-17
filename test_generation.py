@@ -2,6 +2,7 @@
 """Shared generation logic (Python mirror of index.html JS) + rubric tests."""
 from __future__ import annotations
 
+import hashlib
 import json
 import random
 import re
@@ -13,6 +14,16 @@ from pathlib import Path
 from common import DATE_KIND_TO_YMD, DATE_KINDS, MONTHS
 
 ROOT = Path(__file__).resolve().parent
+
+
+def stable_hash(s: str) -> int:
+    """Process-stable hash of a string.
+
+    ``hash()`` is salted per interpreter run (``PYTHONHASHSEED``), so seeding an
+    RNG with it makes ``run_tests(seed=...)`` non-reproducible run-to-run. This
+    derives a deterministic integer from the string instead.
+    """
+    return int.from_bytes(hashlib.blake2b(s.encode("utf-8"), digest_size=8).digest(), "big")
 
 
 def pad(n: int, w: int) -> str:
@@ -286,7 +297,7 @@ def run_tests(seed: int = 42, rounds: int = 5) -> int:
         for e in pool:
             for i in range(rounds):
                 try:
-                    s = generate_from(e, True, random.Random(seed + i * 17 + hash(e["title"]) % 1000))
+                    s = generate_from(e, True, random.Random(seed + i * 17 + stable_hash(e["title"]) % 1000))
                     validate_output(e, s)
                 except Exception as ex:
                     failures.append(f"{kind} | {e['title'][:50]} | {ex}")
@@ -294,7 +305,7 @@ def run_tests(seed: int = 42, rounds: int = 5) -> int:
     # Rubric R3: every entry generates without exception; no leftover placeholders for non-fixed
     for e in entries:
         try:
-            s = generate_from(e, True, random.Random(hash(e["title"]) % (10**6)))
+            s = generate_from(e, True, random.Random(stable_hash(e["title"]) % (10**6)))
             if e["template"]["kind"] != "fixed":
                 assert "{date}" not in s and "YYYYMMDD" not in s
                 if e["template"]["kind"] == "month_dd_yyyy":
