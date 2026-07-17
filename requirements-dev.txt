@@ -1,0 +1,4 @@
+# Development / test dependencies.
+#   pip install -r requirements-dev.txt
+pytest>=8,<9
+coverage>=7,<8
