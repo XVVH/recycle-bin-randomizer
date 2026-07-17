@@ -278,19 +278,29 @@ def validate_output(entry: dict, s: str) -> None:
 
 
 def run_tests(seed: int = 42, rounds: int = 5) -> int:
-    data = json.loads((ROOT / "data.json").read_text(encoding="utf-8"))
+    data_path = ROOT / "data.json"
+    if not data_path.exists():
+        raise SystemExit(f"Missing {data_path.name}; run build_data.py first to generate it.")
+    data = json.loads(data_path.read_text(encoding="utf-8"))
     entries = data["entries"]
     rng = random.Random(seed)
     failures = []
 
     # Rubric R1: IMG XXXX pads to 4
-    img = next(e for e in entries if e["title"] == "IMG XXXX")
-    for _ in range(50):
-        s = generate_from(img, True, random.Random(rng.randint(0, 10**9)))
-        bare = s.strip('"')
-        m = re.search(r"IMG\s+(\d+)", bare)
-        assert m and len(m.group(1)) == 4, s
-        assert 0 <= int(m.group(1)) <= 9999
+    img = next((e for e in entries if e["title"] == "IMG XXXX"), None)
+    if img is None:
+        failures.append("R1 | fixture entry 'IMG XXXX' not found in data.json")
+    else:
+        for _ in range(50):
+            s = generate_from(img, True, random.Random(rng.randint(0, 10**9)))
+            bare = s.strip('"')
+            m = re.search(r"IMG\s+(\d+)", bare)
+            try:
+                assert m and len(m.group(1)) == 4, s
+                assert 0 <= int(m.group(1)) <= 9999
+            except AssertionError as ex:
+                failures.append(f"R1 | IMG XXXX | {ex}")
+                break
 
     # Rubric R2: date kinds leave no Month/YYYY tokens
     date_kinds = {
