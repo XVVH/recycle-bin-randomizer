@@ -175,13 +175,18 @@ const entries = DATA.entries;
 const MONTHS = {months_js};
 const DATE_KINDS = new Set({date_kinds_js});
 
-document.getElementById('srcDoc').href = DATA.meta.sourceDoc;
+function safeUrl(u) {{
+  const s = String(u||'');
+  return /^https?:\\/\\//i.test(s) ? s : '#';
+}}
+const SRC_DOC = safeUrl(DATA.meta.sourceDoc);
+document.getElementById('srcDoc').href = SRC_DOC;
 document.getElementById('count').textContent = DATA.meta.entryCount;
 document.getElementById('attr').textContent =
   DATA.meta.attribution + ' ' + (DATA.meta.paddingRule||'') + ' ' + (DATA.meta.dateRule||'');
 document.getElementById('footAttr').innerHTML =
-  'Source: <a href="'+DATA.meta.sourceDoc+'" target="_blank" rel="noopener">'+DATA.meta.sourceTitle+'</a>. ' +
-  DATA.meta.attribution +
+  'Source: <a href="'+esc(SRC_DOC)+'" target="_blank" rel="noopener">'+esc(DATA.meta.sourceTitle)+'</a>. ' +
+  esc(DATA.meta.attribution) +
   ' · <a href="https://kvnaust.github.io/YouTube-NonBiasedVideoSearcher/" target="_blank" rel="noopener">Non-biased Video Searcher</a>' +
   ' · <a href="https://youtube.com/@kvnaust" target="_blank" rel="noopener">@KVNAUST</a>' +
   ' · <a href="https://x.com/mingkastermk" target="_blank" rel="noopener">X @mingkastermk</a>';
