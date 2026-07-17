@@ -153,8 +153,8 @@ function b64ToUtf8(b64) {
 }
 const DATA = JSON.parse(b64ToUtf8(document.getElementById('DATA_B64').textContent.trim()));
 const entries = DATA.entries;
-const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-const DATE_KINDS = new Set(['yyyymmdd','yyyy_mm_dd','yyyy_dash_mm_dd','ddmmyyyy','ddmmyy','mm_dd_yyyy','yyyy_mm','month_dd_yyyy','month_yyyy','year','ko_ymd','ja_ymd']);
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const DATE_KINDS = new Set(["ddmmyy", "ddmmyyyy", "ja_ymd", "ko_ymd", "mm_dd_yyyy", "month_dd_yyyy", "month_yyyy", "year", "yyyy_dash_mm_dd", "yyyy_mm", "yyyy_mm_dd", "yyyymmdd"]);
 
 document.getElementById('srcDoc').href = DATA.meta.sourceDoc;
 document.getElementById('count').textContent = DATA.meta.entryCount;
