@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import base64
+import json
 from pathlib import Path
+
+from common import DATE_KINDS, MONTHS
 
 ROOT = Path(__file__).resolve().parent
 
@@ -11,6 +14,8 @@ ROOT = Path(__file__).resolve().parent
 def main() -> None:
     data = (ROOT / "data.min.json").read_text(encoding="utf-8")
     b64 = base64.b64encode(data.encode("utf-8")).decode("ascii")
+    months_js = json.dumps(MONTHS, ensure_ascii=False)
+    date_kinds_js = json.dumps(sorted(DATE_KINDS), ensure_ascii=False)
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -167,8 +172,8 @@ function b64ToUtf8(b64) {{
 }}
 const DATA = JSON.parse(b64ToUtf8(document.getElementById('DATA_B64').textContent.trim()));
 const entries = DATA.entries;
-const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-const DATE_KINDS = new Set(['yyyymmdd','yyyy_mm_dd','yyyy_dash_mm_dd','ddmmyyyy','ddmmyy','mm_dd_yyyy','yyyy_mm','month_dd_yyyy','month_yyyy','year','ko_ymd','ja_ymd']);
+const MONTHS = {months_js};
+const DATE_KINDS = new Set({date_kinds_js});
 
 document.getElementById('srcDoc').href = DATA.meta.sourceDoc;
 document.getElementById('count').textContent = DATA.meta.entryCount;
