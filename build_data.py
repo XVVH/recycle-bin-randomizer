@@ -481,6 +481,14 @@ def parse_doc(text: str) -> dict:
 
 
 def main() -> None:
+    if not DOC.exists():
+        raise SystemExit(
+            f"Input doc not found: {DOC}\n"
+            "Download it first (see README 'Rebuild from the Google Doc'):\n"
+            '  curl -sSL "https://docs.google.com/document/d/'
+            '1mV5PhumaIJ8mtH8XmohqXkk5fjK_HlqcineMccPQm5A/export?format=txt" '
+            f'-o {DOC}'
+        )
     text = DOC.read_text(encoding="utf-8", errors="replace")
     out = parse_doc(text)
     (ROOT / "data.json").write_text(json.dumps(out, indent=2, ensure_ascii=False), encoding="utf-8")

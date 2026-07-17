@@ -12,7 +12,12 @@ ROOT = Path(__file__).resolve().parent
 
 
 def main() -> None:
-    data = (ROOT / "data.min.json").read_text(encoding="utf-8")
+    data_path = ROOT / "data.min.json"
+    if not data_path.exists():
+        raise SystemExit(
+            f"Missing {data_path.name}; run build_data.py first to generate it."
+        )
+    data = data_path.read_text(encoding="utf-8")
     b64 = base64.b64encode(data.encode("utf-8")).decode("ascii")
     months_js = json.dumps(MONTHS, ensure_ascii=False)
     date_kinds_js = json.dumps(sorted(DATE_KINDS), ensure_ascii=False)
@@ -170,8 +175,20 @@ function b64ToUtf8(b64) {{
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
   return new TextDecoder('utf-8').decode(bytes);
 }}
-const DATA = JSON.parse(b64ToUtf8(document.getElementById('DATA_B64').textContent.trim()));
-const entries = DATA.entries;
+let DATA, entries;
+try {{
+  DATA = JSON.parse(b64ToUtf8(document.getElementById('DATA_B64').textContent.trim()));
+  entries = DATA && DATA.entries;
+  if (!Array.isArray(entries)) throw new Error('embedded data is missing an "entries" array');
+}} catch (err) {{
+  document.body.innerHTML =
+    '<div style="padding:2rem;font-family:system-ui,sans-serif;color:#e8eaef;background:#0c0d10;min-height:100vh">' +
+    '<h1>Failed to load lead data</h1>' +
+    '<p>The embedded data could not be parsed. Try rebuilding <code>index.html</code> via ' +
+    '<code>python3 build_data.py &amp;&amp; python3 build_index.py</code>.</p>' +
+    '<pre style="white-space:pre-wrap;color:#ffb020">' + String((err && err.message) || err) + '</pre></div>';
+  throw err;
+}}
 const MONTHS = {months_js};
 const DATE_KINDS = new Set({date_kinds_js});
 
@@ -319,7 +336,16 @@ function generate() {{
   const pool = poolEntries();
   if (!pool.length) {{ alert('No entries in this pool'); return; }}
   const e = pool[randInt(0, pool.length-1)];
-  const q = generateFrom(e, document.getElementById('preferQuoted').checked);
+  let q;
+  try {{
+    q = generateFrom(e, document.getElementById('preferQuoted').checked);
+  }} catch (err) {{
+    console.error('generation failed for', e && e.title, err);
+    document.getElementById('result').textContent = '\u26a0 generation error';
+    document.getElementById('resultMeta').textContent =
+      'Could not generate from "' + esc((e && e.title) || '?') + '" — see console for details.';
+    return;
+  }}
   document.getElementById('result').textContent = q;
   document.getElementById('resultMeta').innerHTML =
     '<strong>'+esc(e.mapTitle)+'</strong> · '+esc(e.title)+
@@ -339,7 +365,7 @@ async function copy() {{
   if (document.getElementById('result').textContent === '—') generate();
   const v = document.getElementById('result').textContent;
   try {{ await navigator.clipboard.writeText(v); toast('Copied'); }}
-  catch {{ prompt('Copy:', v); }}
+  catch (err) {{ console.warn('clipboard write failed, falling back to prompt', err); prompt('Copy:', v); }}
 }}
 function openYt() {{
   if (document.getElementById('result').textContent === '—') generate();
